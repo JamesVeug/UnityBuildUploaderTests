@@ -15,7 +15,7 @@ public class BuildUploaderTests
     [Test]
     public void FailTest()
     {
-        Assert.AreNotEqual(3, 2);
+        Assert.AreEqual(3, 2);
     }
     
     [UnityTest]
