@@ -1,14 +1,17 @@
-name: Test project
+name: Build Uploader Tests
 
 on: [push, pull_request]
 
 jobs:
   testAllModes:
-    name: Test in ${{ matrix.testMode }}
+    name: Test ${{ matrix.unityVersion }} ${{ matrix.testMode }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
+        unityVersion:
+          - '6000.3.5f1'
+          - '2019.4.41f2'
         projectPath:
           - ''
         testMode:
@@ -30,6 +33,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
+          unityVersion: ${{ matrix.unityVersion }}
           projectPath: ${{ matrix.projectPath }}
           testMode: ${{ matrix.testMode }}
           artifactsPath: ${{ matrix.testMode }}-artifacts
