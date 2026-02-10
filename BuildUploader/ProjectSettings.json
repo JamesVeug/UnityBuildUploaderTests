@@ -1,0 +1,7 @@
+{
+	"Version": 1,
+	"IncludeBuildMetaDataInStreamingDataFolder": true,
+	"LastBuildNumber": 0,
+	"TotalUploadTasksStarted": 0,
+	"AutoGenerateMenuItemPath": "ThirdParty/BuildUploader"
+}
