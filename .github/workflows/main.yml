@@ -1,4 +1,4 @@
-name: Test package
+name: Test project
 
 on: [push, pull_request]
 
@@ -10,16 +10,21 @@ jobs:
       fail-fast: false
       matrix:
         projectPath:
-          - 'com.veugeljame.builduploader'
-        unityVersion: 
-          - '6000.3.5f1'
+          - com.veugeljame.builduploader
         testMode:
           - playmode
           - editmode
+          - standalone
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: true
+      - uses: actions/cache@v3
+        with:
+          path: ${{ matrix.projectPath }}/Library
+          key: Library-${{ matrix.projectPath }}
+          restore-keys: |
+            Library-
       - uses: game-ci/unity-test-runner@v4
         id: tests
         env:
@@ -27,9 +32,7 @@ jobs:
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          packageMode: true
           projectPath: ${{ matrix.projectPath }}
-          unityVersion: ${{ matrix.unityVersion }}
           testMode: ${{ matrix.testMode }}
           artifactsPath: ${{ matrix.testMode }}-artifacts
           githubToken: ${{ secrets.GITHUB_TOKEN }}
