@@ -10,7 +10,7 @@ jobs:
       fail-fast: false
       matrix:
         projectPath:
-          - 'Build Uploader'
+          - 'com.veugeljame.builduploader'
         unityVersion: 
           - '6000.3.5f1'
         testMode:
