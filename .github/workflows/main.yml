@@ -12,12 +12,11 @@ jobs:
         projectPath:
           - ''
         testMode:
-          - playmode
           - editmode
     steps:
       - uses: actions/checkout@v4
         with:
-          lfs: true
+          lfs: false
       - uses: actions/cache@v3
         with:
           path: ${{ matrix.projectPath }}/Library
@@ -36,7 +35,7 @@ jobs:
           artifactsPath: ${{ matrix.testMode }}-artifacts
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: ${{ matrix.testMode }} Test Results
-          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;assemblyFilters:+my.assembly.*'
+          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;assemblyFilters:.*builduploader.*'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
