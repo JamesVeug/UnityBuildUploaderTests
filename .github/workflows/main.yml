@@ -10,11 +10,10 @@ jobs:
       fail-fast: false
       matrix:
         projectPath:
-          - com.veugeljame.builduploader
+          - BuildUploaderTests
         testMode:
           - playmode
           - editmode
-          - standalone
     steps:
       - uses: actions/checkout@v4
         with:
