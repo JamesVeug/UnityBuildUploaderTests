@@ -130,11 +130,10 @@
       }
     },
     "com.veugeljame.builduploader": {
-      "version": "https://github.com/JamesVeug/UnitySteamBuildUploader.git#develop",
+      "version": "file:com.veugeljame.builduploader",
       "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "51ae0a44c981ff08e6e5d8f1acef2a3948cfdaa4"
+      "source": "embedded",
+      "dependencies": {}
     },
     "com.unity.modules.accessibility": {
       "version": "1.0.0",
