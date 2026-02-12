@@ -1,4 +1,8 @@
 # UnityBuildUploaderTests
 
-[![Build](https://github.com/JamesVeug/UnityBuildUploaderTests/actions/workflows/unity-tests.yml/badge.svg)](https://github.com/JamesVeug/UnityBuildUploaderTests/actions/workflows/unity-tests.yml)
-[![Tests](https://img.shields.io/badge/tests-46%2B%20passed-brightgreen)](https://github.com/JamesVeug/UnityBuildUploaderTests/actions/workflows/unity-tests.yml)
+Build
+
+
+[![Tests](https://github.com/JamesVeug/UnityBuildUploaderTests/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/JamesVeug/UnityBuildUploaderTests/actions/workflows/main.yml)
+
+[![Build](https://github.com/JamesVeug/UnityBuildUploaderTests/actions/workflows/main.yml/badge.svg)](https://github.com/JamesVeug/UnityBuildUploaderTests/actions/workflows/Build-Uploader-Tests.yml)

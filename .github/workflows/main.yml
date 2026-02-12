@@ -4,17 +4,25 @@ on: [push, pull_request]
 
 jobs:
   testAllModes:
-    name: Test ${{ matrix.unityVersion }} ${{ matrix.testMode }}
+    name: Tests ${{ matrix.unityVersion }} ${{ matrix.testMode }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
       matrix:
         unityVersion:
           - '6000.3.5f1'
+          - '6000.2.9f1'
+          - '6000.1.17f1'
+          - '6000.0.68f1'
+          - '2022.3.62f3'
+          - '2021.3.45f2'
+          - '2020.3.49f1'
+          - '2019.4.41f1'
         projectPath:
           - ''
         testMode:
           - editmode
+          - playmode
     steps:
       - uses: actions/checkout@v4
         with:
@@ -38,7 +46,6 @@ jobs:
           artifactsPath: ${{ matrix.testMode }}-artifacts
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: ${{ matrix.testMode }} Test Results
-          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;assemblyFilters:.*builduploader.*'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
