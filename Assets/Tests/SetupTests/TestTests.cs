@@ -1,10 +1,9 @@
-using System;
 using System.Collections;
 using NUnit.Framework;
-using UnityEngine;
 using UnityEngine.TestTools;
 
-public class BuildUploaderTests
+[Parallelizable]
+public class TestTests
 {
     [Test]
     public void SucceedTest()
@@ -15,7 +14,7 @@ public class BuildUploaderTests
     [Test]
     public void FailTest()
     {
-        Assert.AreNotEqual(3, 3, "This test failed? 3 == 3? ABSURD!");
+        Assert.AreNotEqual(3, 2, "This test failed? 3 == 2? ABSURD!");
     }
     
     [UnityTest]
@@ -23,5 +22,12 @@ public class BuildUploaderTests
     {
         yield return null;
         Assert.AreEqual(3, 3, "This test passed? 3 != 3? ABSURD!");
+    }
+    
+    [UnityTest]
+    public IEnumerator FailUnityTest()
+    {
+        yield return null;
+        Assert.AreNotEqual(3, 2, "This test failed? 3 == 2? ABSURD!");
     }
 }
