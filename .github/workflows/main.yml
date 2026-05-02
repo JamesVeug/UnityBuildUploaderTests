@@ -7,7 +7,7 @@ jobs:
     name: Tests ${{ matrix.unityVersion }} ${{ matrix.testMode }}
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         unityVersion:
           - '6000.4.5f1'
@@ -38,7 +38,7 @@ jobs:
           - unityVersion: '2022.3.62f3'
             packagePins: '{"com.unity.test-framework":"1.6.0","com.unity.ugui":"1.0.0"}'
           - unityVersion: '2021.3.45f2'
-            packagePins: '{"com.unity.test-framework":"1.6.0","com.unity.ugui":"1.0.0"}'
+            packagePins: '{"com.unity.test-framework":"1.1.33","com.unity.ugui":"1.0.0"}'
           - unityVersion: '2020.3.49f1'
             packagePins: '{"com.unity.test-framework":"1.1.33","com.unity.ugui":"1.0.0"}'
           - unityVersion: '2019.4.41f1'
