@@ -51,7 +51,7 @@ jobs:
       - uses: actions/cache@v3
         with:
           path: ${{ matrix.projectPath }}/Library
-          key: Library-${{ matrix.projectPath }}-${{ matrix.unityVersion }}-${{ hashFiles('Packages/manifest.json', 'Packages/packages-lock.json') }}
+          key: Library-${{ matrix.projectPath }}-${{ matrix.unityVersion }}-${{ hashFiles('Packages/manifest.json', 'Packages/packages-lock.json', 'Assets/**/*.asmdef', 'Packages/**/*.asmdef') }}
           restore-keys: |
             Library-${{ matrix.projectPath }}-${{ matrix.unityVersion }}-
             Library-${{ matrix.projectPath }}-
