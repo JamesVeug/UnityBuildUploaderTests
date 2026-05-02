@@ -23,16 +23,61 @@ jobs:
         testMode:
           - editmode
           - playmode
+        include:
+          - unityVersion: '6000.3.5f1'
+            packagePins: '{}'
+          - unityVersion: '6000.2.9f1'
+            packagePins: '{}'
+          - unityVersion: '6000.1.17f1'
+            packagePins: '{}'
+          - unityVersion: '6000.0.68f1'
+            packagePins: '{}'
+          - unityVersion: '2022.3.62f3'
+            packagePins: '{}'
+          - unityVersion: '2021.3.45f2'
+            packagePins: '{}'
+          - unityVersion: '2020.3.49f1'
+            packagePins: '{"com.unity.test-framework":"1.1.33"}'
+          - unityVersion: '2019.4.41f1'
+            packagePins: '{"com.unity.test-framework":"1.1.31"}'
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: false
+
       - uses: actions/cache@v3
         with:
           path: ${{ matrix.projectPath }}/Library
-          key: Library-${{ matrix.projectPath }}
+          key: Library-${{ matrix.projectPath }}-${{ matrix.unityVersion }}-${{ hashFiles('Packages/manifest.json', 'Packages/packages-lock.json') }}
           restore-keys: |
-            Library-
+            Library-${{ matrix.projectPath }}-${{ matrix.unityVersion }}-
+            Library-${{ matrix.projectPath }}-
+
+      - name: Pin Unity packages for this Unity version
+        if: matrix.packagePins != '{}'
+        shell: bash
+        env:
+          PACKAGE_PINS: ${{ matrix.packagePins }}
+          PROJECT_PATH: ${{ matrix.projectPath }}
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const path = require('path');
+
+          const projectPath = process.env.PROJECT_PATH || '.';
+          const manifestPath = path.join(projectPath, 'Packages', 'manifest.json');
+          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+          const packagePins = JSON.parse(process.env.PACKAGE_PINS || '{}');
+
+          manifest.dependencies ??= {};
+
+          for (const [packageName, version] of Object.entries(packagePins)) {
+            manifest.dependencies[packageName] = version;
+          }
+
+          fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+          NODE
+
       - uses: game-ci/unity-test-runner@v4
         id: tests
         env:
@@ -46,8 +91,9 @@ jobs:
           artifactsPath: ${{ matrix.testMode }}-artifacts
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: ${{ matrix.testMode }} Test Results
+
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Test results for ${{ matrix.testMode }}
+          name: Test results for ${{ matrix.unityVersion }} ${{ matrix.testMode }}
           path: ${{ steps.tests.outputs.artifactsPath }}
