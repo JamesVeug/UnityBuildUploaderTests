@@ -26,8 +26,6 @@ jobs:
           - editmode
           - playmode
         include:
-          - unityVersion: '6000.5.0f1'
-            packagePins: '{"com.unity.ugui":"1.0.0"}'
           - unityVersion: '6000.4.0f1'
             packagePins: '{"com.unity.ugui":"1.0.0"}'
           - unityVersion: '6000.3.5f1'
