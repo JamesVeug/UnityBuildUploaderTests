@@ -10,7 +10,6 @@ jobs:
       fail-fast: true
       matrix:
         unityVersion:
-          - '6000.5.0b6'
           - '6000.4.5f1'
           - '6000.3.12f1'
           - '6000.2.9f1'
