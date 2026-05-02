@@ -10,7 +10,9 @@ jobs:
       fail-fast: true
       matrix:
         unityVersion:
-          - '6000.3.5f1'
+          - '6000.5.0b6'
+          - '6000.4.5f1'
+          - '6000.3.12f1'
           - '6000.2.9f1'
           - '6000.1.17f1'
           - '6000.0.68f1'
@@ -24,22 +26,26 @@ jobs:
           - editmode
           - playmode
         include:
+          - unityVersion: '6000.5.0f1'
+            packagePins: '{"com.unity.ugui":"1.0.0"}'
+          - unityVersion: '6000.4.0f1'
+            packagePins: '{"com.unity.ugui":"1.0.0"}'
           - unityVersion: '6000.3.5f1'
             packagePins: '{}'
           - unityVersion: '6000.2.9f1'
-            packagePins: '{}'
+            packagePins: '{"com.unity.ugui":"1.0.0"}'
           - unityVersion: '6000.1.17f1'
-            packagePins: '{}'
+            packagePins: '{"com.unity.ugui":"1.0.0"}'
           - unityVersion: '6000.0.68f1'
-            packagePins: '{}'
+            packagePins: '{"com.unity.ugui":"1.0.0"}'
           - unityVersion: '2022.3.62f3'
-            packagePins: '{}'
+            packagePins: '{"com.unity.ugui":"1.0.0"}'
           - unityVersion: '2021.3.45f2'
-            packagePins: '{}'
+            packagePins: '{"com.unity.ugui":"1.0.0"}'
           - unityVersion: '2020.3.49f1'
-            packagePins: '{"com.unity.test-framework":"1.1.33"}'
+            packagePins: '{"com.unity.test-framework":"1.1.33","com.unity.ugui":"1.0.0"}'
           - unityVersion: '2019.4.41f1'
-            packagePins: '{"com.unity.test-framework":"1.1.31"}'
+            packagePins: '{"com.unity.test-framework":"1.1.31","com.unity.ugui":"1.0.0"}'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -65,7 +71,9 @@ jobs:
           const path = require('path');
 
           const projectPath = process.env.PROJECT_PATH || '.';
-          const manifestPath = path.join(projectPath, 'Packages', 'manifest.json');
+          const packagesPath = path.join(projectPath, 'Packages');
+          const manifestPath = path.join(packagesPath, 'manifest.json');
+          const lockPath = path.join(packagesPath, 'packages-lock.json');
           const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
           const packagePins = JSON.parse(process.env.PACKAGE_PINS || '{}');
 
@@ -76,6 +84,10 @@ jobs:
           }
 
           fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+          if (fs.existsSync(lockPath)) {
+            fs.rmSync(lockPath);
+          }
           NODE
 
       - uses: game-ci/unity-test-runner@v4
