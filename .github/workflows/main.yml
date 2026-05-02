@@ -75,6 +75,7 @@ jobs:
           const packagePins = JSON.parse(process.env.PACKAGE_PINS || '{}');
 
           manifest.dependencies ??= {};
+          manifest.dependencies["com.veugeljame.builduploader"] = "file:com.veugeljame.builduploader";
 
           for (const [packageName, version] of Object.entries(packagePins)) {
             manifest.dependencies[packageName] = version;
