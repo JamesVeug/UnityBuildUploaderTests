@@ -5,9 +5,12 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using UnityEditor;
-using UnityEditor.Build.Profile;
 using UnityEngine;
 using UnityEngine.TestTools;
+
+#if UNITY_6000_3_OR_NEWER
+using UnityEditor.Build.Profile;
+#endif
 
 namespace Wireframe.Tests
 {
@@ -58,6 +61,7 @@ namespace Wireframe.Tests
             };
             yield return new TestCaseData(new Args(configSource, getBuildConfigFiles)).Returns(null); 
             
+#if UNITY_6000_3_OR_NEWER
             // Build Profile
             BuildProfile profile = BuildUtils.GetAllCustomBuildProfiles().FirstOrDefault(a=>new BuildProfileWrapper(a).GetTarget == BuildTarget.StandaloneWindows64);
             BuildProfileSource profileSource = new BuildProfileSource(profile); 
@@ -67,6 +71,7 @@ namespace Wireframe.Tests
                 return new string[] { Path.Combine(source.SourceFilePath(), profileSource.BuildConfig.GetProductName + ".exe") };
             };
             yield return new TestCaseData(new Args(profileSource, getBuildProfileFiles)).Returns(null); 
+#endif
         }
 
         [UnityTest, TestCaseSource(nameof(Sources))]
