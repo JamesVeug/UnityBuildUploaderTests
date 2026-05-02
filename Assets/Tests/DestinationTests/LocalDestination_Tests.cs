@@ -32,7 +32,7 @@ namespace Wireframe.Tests
         {
             // Folder Source
             FolderSource folderSource = new FolderSource(Path.Combine(Application.dataPath, "Scenes"));
-            Func<AUploadSource, string[]> getFolderFiles = static (source) =>
+            Func<AUploadSource, string[]> getFolderFiles = (source) =>
             {
                 return Directory.GetFiles(source.SourceFilePath(), "*.*", SearchOption.AllDirectories);
             };
@@ -40,7 +40,7 @@ namespace Wireframe.Tests
                 
             // File Source
             FileSource fileSource = new FileSource(Path.Combine(Application.dataPath, "Scenes", "SampleScene.unity"));
-            Func<AUploadSource, string[]> getFileFiles = static (source) => { return new string[]{ source.SourceFilePath() }; };
+            Func<AUploadSource, string[]> getFileFiles = (source) => { return new string[]{ source.SourceFilePath() }; };
             yield return new TestCaseData(new Args(fileSource, getFileFiles)).Returns(null);
             
             // Build Config
@@ -51,7 +51,7 @@ namespace Wireframe.Tests
             config.SceneGUIDs = new List<string>() { "99c9720ab356a0642a771bea13969a05" }; // SampleScene.unity
             
             BuildConfigSource configSource = new BuildConfigSource(config);
-            Func<AUploadSource, string[]> getBuildConfigFiles = static (source) =>
+            Func<AUploadSource, string[]> getBuildConfigFiles = (source) =>
             {
                 BuildConfigSource buildSource = source as BuildConfigSource;
                 return new string[] { Path.Combine(source.SourceFilePath(), buildSource.BuildConfig.GetProductName + ".exe") };
@@ -61,7 +61,7 @@ namespace Wireframe.Tests
             // Build Profile
             BuildProfile profile = BuildUtils.GetAllCustomBuildProfiles().FirstOrDefault(a=>new BuildProfileWrapper(a).GetTarget == BuildTarget.StandaloneWindows64);
             BuildProfileSource profileSource = new BuildProfileSource(profile); 
-            Func<AUploadSource, string[]> getBuildProfileFiles = static (source) =>
+            Func<AUploadSource, string[]> getBuildProfileFiles = (source) =>
             {
                 BuildProfileSource profileSource = source as BuildProfileSource;
                 return new string[] { Path.Combine(source.SourceFilePath(), profileSource.BuildConfig.GetProductName + ".exe") };
