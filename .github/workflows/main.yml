@@ -11,7 +11,7 @@ jobs:
       matrix:
         unityVersion:
           - '6000.4.5f1'
-          - '6000.3.12f1'
+          - '6000.3.5f1'
           - '6000.2.9f1'
           - '6000.1.17f1'
           - '6000.0.68f1'
@@ -25,7 +25,7 @@ jobs:
           - editmode
           - playmode
         include:
-          - unityVersion: '6000.4.0f1'
+          - unityVersion: '6000.4.5f1'
             packagePins: '{"com.unity.ugui":"1.0.0"}'
           - unityVersion: '6000.3.5f1'
             packagePins: '{}'
