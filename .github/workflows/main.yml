@@ -75,9 +75,14 @@ jobs:
             Library-${{ matrix.unityVersion }}-${{ matrix.testMode }}-
             Library-${{ matrix.unityVersion }}-
 
-      # Patches manifest.json to pin per-version package versions and inject the
-      # local BuildUploader package. Deletes packages-lock.json so Unity resolves
-      # fresh against the pinned versions rather than a stale lock.
+      # Pins per-version package versions in manifest.json and deletes the lock
+      # so Unity re-resolves cleanly against the pinned versions.
+      #
+      # Intentionally does NOT touch com.veugeljame.builduploader — that entry
+      # already exists correctly in manifest.json as file:com.veugeljame.builduploader,
+      # pointing at Packages/com.veugeljame.builduploader which is checked out
+      # as part of this repo. Overwriting it here previously caused Unity to fail
+      # to resolve the package inside the game-ci Docker container.
       - name: Pin packages for Unity ${{ matrix.unityVersion }}
         shell: bash
         env:
@@ -93,12 +98,9 @@ jobs:
           const manifest    = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
           const packagePins = JSON.parse(process.env.PACKAGE_PINS || '{}');
 
-          manifest.dependencies ??= {};
-
-          // Always inject the local BuildUploader package.
-          manifest.dependencies['com.veugeljame.builduploader'] = 'file:com.veugeljame.builduploader';
-
-          // Apply per-version package pins.
+          // Apply per-version package pins only.
+          // Do not modify com.veugeljame.builduploader — it is already correctly
+          // declared in manifest.json and lives in this repo under Packages/.
           for (const [pkg, version] of Object.entries(packagePins)) {
             manifest.dependencies[pkg] = version;
           }
@@ -110,7 +112,8 @@ jobs:
             fs.rmSync(lockPath);
           }
 
-          console.log('Manifest patched successfully.');
+          console.log('Patched manifest.json:');
+          console.log(JSON.stringify(manifest.dependencies, null, 2));
           NODE
 
       - name: Run ${{ matrix.testMode }} tests
