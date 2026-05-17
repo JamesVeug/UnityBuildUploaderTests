@@ -1,0 +1,3 @@
+[submodule "Packages/com.veugeljame.builduploader"]
+	path = Packages/com.veugeljame.builduploader
+	url = https://github.com/JamesVeug/UnitySteamBuildUploader.git
