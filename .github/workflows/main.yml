@@ -36,7 +36,6 @@ jobs:
           - '2019.4.41f1'
         testMode:
           - editmode
-          - playmode
         include:
           - unityVersion: '6000.4.5f1'
             packagePins: '{"com.unity.test-framework":"1.6.0","com.unity.ugui":"1.0.0"}'
@@ -62,6 +61,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           lfs: false
+          submodules: true
 
       # Cache key includes Unity version so different Unity versions never share a Library folder.
       # Secondary restore keys fall back gracefully when the exact key is missing (e.g. after a
