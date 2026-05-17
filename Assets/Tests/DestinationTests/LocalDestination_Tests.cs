@@ -80,26 +80,44 @@ namespace Wireframe.Tests
 
 		public static IEnumerable Sources()
 		{
-			// FolderSource — copies an entire directory
+			// FolderSource — copies Application.dataPath itself, which is guaranteed
+			// to exist on any machine (local or CI) without needing a specific subfolder
+			// like "Scenes" which may not exist in the test repo.
 			yield return new TestCaseData(new SourceDescriptor(
 				name: "FolderSource",
-				buildSource: () => new FolderSource(Path.Combine(Application.dataPath, "Scenes")),
+				buildSource: () => new FolderSource(Application.dataPath),
 				getExpectedFiles: source =>
 					Directory.GetFiles(source.SourceFilePath(), "*.*", SearchOption.AllDirectories)
 			));
 
-			// FileSource — copies a single file
+			// FileSource — uses a .asmdef file which must exist because the test
+			// assembly itself depends on one. The exact GUID-resolved path is found
+			// at runtime so it stays correct if the file is ever moved.
 			yield return new TestCaseData(new SourceDescriptor(
 				name: "FileSource",
-				buildSource: () => new FileSource(Path.Combine(Application.dataPath, "Scenes", "SampleScene.unity")),
+				buildSource: () =>
+				{
+					// Find any .asmdef under Assets/ — it must exist for the tests to compile.
+					string[] asmdefs = Directory.GetFiles(Application.dataPath, "*.asmdef", SearchOption.AllDirectories);
+					Assume.That(asmdefs.Length > 0,
+						"No .asmdef file found under Assets/. The test project is misconfigured.");
+					return new FileSource(asmdefs[0]);
+				},
 				getExpectedFiles: source => new[] { source.SourceFilePath() }
 			));
 
-			// BuildConfigSource — triggers a real build, copies the resulting executable
+			// BuildConfigSource — only valid when the StandaloneWindows64 build module
+			// is installed. On Linux CI runners without that module Unity will fail the
+			// build immediately. Assume guards skip the test with an Inconclusive result
+			// rather than a failure when the prerequisite isn't met.
 			yield return new TestCaseData(new SourceDescriptor(
 				name: "BuildConfigSource",
 				buildSource: () =>
 				{
+					Assume.That(
+						BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64),
+						"StandaloneWindows64 build module is not installed — skipping BuildConfigSource test.");
+
 					BuildConfig config = new BuildConfig
 					{
 						ProductName    = nameof(LocalDestination_Test),
@@ -117,17 +135,22 @@ namespace Wireframe.Tests
 			));
 
 #if UNITY_6000_3_OR_NEWER
-			// BuildProfileSource — Unity 6.3+ only
+			// BuildProfileSource — Unity 6.3+ only, and only when a StandaloneWindows64
+			// profile exists in the project and the build module is installed.
 			yield return new TestCaseData(new SourceDescriptor(
 				name: "BuildProfileSource",
 				buildSource: () =>
 				{
+					Assume.That(
+						BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64),
+						"StandaloneWindows64 build module is not installed — skipping BuildProfileSource test.");
+
 					BuildProfile profile = BuildUtils
 						.GetAllCustomBuildProfiles()
 						.FirstOrDefault(p => new BuildProfileWrapper(p).GetTarget == BuildTarget.StandaloneWindows64);
 
-					Assert.IsNotNull(profile,
-						"No StandaloneWindows64 Build Profile found. Add one to the project before running this test.");
+					Assume.That(profile != null,
+						"No StandaloneWindows64 Build Profile found — skipping BuildProfileSource test.");
 
 					return new BuildProfileSource(profile);
 				},

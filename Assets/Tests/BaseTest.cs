@@ -118,14 +118,34 @@ namespace Wireframe.Tests
 				yield break;
 			}
 
-			if (shouldSucceed)
+			if (shouldSucceed && !task.IsSuccessful)
 			{
-				Assert.IsTrue(task.IsSuccessful, failMessage);
+				// Collect all fail reasons from the report so the test output
+				// immediately tells you what went wrong without needing to dig
+				// through Unity logs or re-run with extra instrumentation.
+				string reasons = BuildFailReasonString(task);
+				Assert.Fail($"{failMessage}\n\nTask report:\n{reasons}");
 			}
-			else
+			else if (!shouldSucceed)
 			{
 				Assert.IsFalse(task.IsSuccessful, failMessage);
 			}
+		}
+
+		private static string BuildFailReasonString(UploadTask task)
+		{
+			if (task.Report == null)
+			{
+				return "(no report available)";
+			}
+
+			var sb = new System.Text.StringBuilder();
+			foreach (var (stepType, reason) in task.Report.GetFailReasons())
+			{
+				sb.AppendLine($"  [{stepType}] {reason}");
+			}
+
+			return sb.Length > 0 ? sb.ToString() : task.Report.GetReport(ignoreEmptySteps: true);
 		}
 
 		// -------------------------------------------------------------------
