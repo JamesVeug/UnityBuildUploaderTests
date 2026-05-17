@@ -130,14 +130,17 @@ jobs:
           githubToken:   ${{ secrets.GITHUB_TOKEN }}
           checkName:     ${{ matrix.unityVersion }} ${{ matrix.testMode }} Results
 
-      # Upload artifacts on failure only during normal development to save storage.
-      # Switch `if: failure()` to `if: always()` when actively debugging a specific version.
       - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          # Artifact names must be unique across the matrix or uploads will silently overwrite each other.
-          name: Results — ${{ matrix.unityVersion }} ${{ matrix.testMode }}
-          path: ${{ steps.tests.outputs.artifactsPath }}
-          # Discard old artifacts after 30 days to avoid storage accumulation across hundreds of runs.
+          name: Results ${{ matrix.unityVersion }} ${{ matrix.testMode }}
+          # Use the same literal value passed to artifactsPath in the test step above.
+          # steps.tests.outputs.artifactsPath is not written when the test step exits
+          # with a non-zero code, causing upload-artifact to error with "Input required: path".
+          path: ${{ matrix.testMode }}-artifacts
+          # Don't error when Unity failed before writing any XML — the test step
+          # failure is already the signal; a missing artifact directory is not an
+          # additional error worth surfacing.
+          if-no-files-found: ignore
           retention-days: 30
