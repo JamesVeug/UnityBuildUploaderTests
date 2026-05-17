@@ -1,13 +1,28 @@
 name: Build Uploader Tests
 
-on: [push, pull_request]
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+# Cancel any in-progress run for the same branch/PR when a new commit is pushed.
+# This avoids queuing up 9×2 = 18 Unity jobs every time you push during active development.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  testAllModes:
-    name: Tests ${{ matrix.unityVersion }} ${{ matrix.testMode }}
+  test:
+    name: ${{ matrix.unityVersion }} — ${{ matrix.testMode }}
     runs-on: ubuntu-latest
+
     strategy:
-      fail-fast: true
+      # fail-fast: false is correct for a compatibility matrix.
+      # With true, a failure on 2019.4 cancels your 6000.4 run before it finishes,
+      # so you never learn whether the failure is version-specific or universal.
+      fail-fast: false
+
       matrix:
         unityVersion:
           - '6000.4.5f1'
@@ -19,8 +34,6 @@ jobs:
           - '2021.3.45f2'
           - '2020.3.49f1'
           - '2019.4.41f1'
-        projectPath:
-          - ''
         testMode:
           - editmode
           - playmode
@@ -43,67 +56,85 @@ jobs:
             packagePins: '{"com.unity.test-framework":"1.1.33","com.unity.ugui":"1.0.0"}'
           - unityVersion: '2019.4.41f1'
             packagePins: '{"com.unity.test-framework":"1.1.31","com.unity.ugui":"1.0.0"}'
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           lfs: false
 
-      - uses: actions/cache@v3
+      # Cache key includes Unity version so different Unity versions never share a Library folder.
+      # Secondary restore keys fall back gracefully when the exact key is missing (e.g. after a
+      # package change) rather than starting cold every time.
+      - name: Restore Library cache
+        uses: actions/cache@v4
         with:
-          path: ${{ matrix.projectPath }}/Library
-          key: Library-${{ matrix.projectPath }}-${{ matrix.unityVersion }}-${{ hashFiles('Packages/manifest.json', 'Packages/packages-lock.json', 'Assets/**/*.asmdef', 'Packages/**/*.asmdef') }}
+          path: Library
+          key: Library-${{ matrix.unityVersion }}-${{ matrix.testMode }}-${{ hashFiles('Packages/manifest.json', 'Packages/packages-lock.json', 'Assets/**/*.asmdef', 'Packages/**/*.asmdef') }}
           restore-keys: |
-            Library-${{ matrix.projectPath }}-${{ matrix.unityVersion }}-
-            Library-${{ matrix.projectPath }}-
+            Library-${{ matrix.unityVersion }}-${{ matrix.testMode }}-
+            Library-${{ matrix.unityVersion }}-
 
-      - name: Pin Unity packages for this Unity version
-        if: matrix.packagePins != '{}'
+      # Patches manifest.json to pin per-version package versions and inject the
+      # local BuildUploader package. Deletes packages-lock.json so Unity resolves
+      # fresh against the pinned versions rather than a stale lock.
+      - name: Pin packages for Unity ${{ matrix.unityVersion }}
         shell: bash
         env:
           PACKAGE_PINS: ${{ matrix.packagePins }}
-          PROJECT_PATH: ${{ matrix.projectPath }}
         run: |
           node <<'NODE'
-          const fs = require('fs');
+          const fs   = require('fs');
           const path = require('path');
 
-          const projectPath = process.env.PROJECT_PATH || '.';
-          const packagesPath = path.join(projectPath, 'Packages');
-          const manifestPath = path.join(packagesPath, 'manifest.json');
-          const lockPath = path.join(packagesPath, 'packages-lock.json');
-          const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+          const manifestPath = path.join('Packages', 'manifest.json');
+          const lockPath     = path.join('Packages', 'packages-lock.json');
+
+          const manifest    = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
           const packagePins = JSON.parse(process.env.PACKAGE_PINS || '{}');
 
           manifest.dependencies ??= {};
-          manifest.dependencies["com.veugeljame.builduploader"] = "file:com.veugeljame.builduploader";
 
-          for (const [packageName, version] of Object.entries(packagePins)) {
-            manifest.dependencies[packageName] = version;
+          // Always inject the local BuildUploader package.
+          manifest.dependencies['com.veugeljame.builduploader'] = 'file:com.veugeljame.builduploader';
+
+          // Apply per-version package pins.
+          for (const [pkg, version] of Object.entries(packagePins)) {
+            manifest.dependencies[pkg] = version;
           }
 
-          fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+          fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 
+          // Remove the lock so Unity re-resolves against the patched manifest.
           if (fs.existsSync(lockPath)) {
             fs.rmSync(lockPath);
           }
+
+          console.log('Manifest patched successfully.');
           NODE
 
-      - uses: game-ci/unity-test-runner@v4
+      - name: Run ${{ matrix.testMode }} tests
+        uses: game-ci/unity-test-runner@v4
         id: tests
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_EMAIL:   ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          unityVersion: ${{ matrix.unityVersion }}
-          projectPath: ${{ matrix.projectPath }}
-          testMode: ${{ matrix.testMode }}
+          unityVersion:  ${{ matrix.unityVersion }}
+          testMode:      ${{ matrix.testMode }}
           artifactsPath: ${{ matrix.testMode }}-artifacts
-          githubToken: ${{ secrets.GITHUB_TOKEN }}
-          checkName: ${{ matrix.testMode }} Test Results
+          githubToken:   ${{ secrets.GITHUB_TOKEN }}
+          checkName:     ${{ matrix.unityVersion }} ${{ matrix.testMode }} Results
 
-      - uses: actions/upload-artifact@v4
+      # Upload artifacts on failure only during normal development to save storage.
+      # Switch `if: failure()` to `if: always()` when actively debugging a specific version.
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Test results for ${{ matrix.unityVersion }} ${{ matrix.testMode }}
+          # Artifact names must be unique across the matrix or uploads will silently overwrite each other.
+          name: Results — ${{ matrix.unityVersion }} ${{ matrix.testMode }}
           path: ${{ steps.tests.outputs.artifactsPath }}
+          # Discard old artifacts after 30 days to avoid storage accumulation across hundreds of runs.
+          retention-days: 30
