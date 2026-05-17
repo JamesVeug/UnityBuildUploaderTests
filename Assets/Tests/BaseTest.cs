@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
-using UnityEngine.TestTools;
-
 namespace Wireframe.Tests
 {
 	/// <summary>
@@ -33,9 +31,6 @@ namespace Wireframe.Tests
 		[TearDown]
 		public virtual void TearDown()
 		{
-			// Restore log assertion state unconditionally so it never bleeds between tests.
-			LogAssert.ignoreFailingMessages = false;
-
 			foreach (string path in _tempPathsToCleanup)
 			{
 				if (Directory.Exists(path))
@@ -56,12 +51,10 @@ namespace Wireframe.Tests
 		// -------------------------------------------------------------------
 
 		/// <summary>
-		/// Creates a fresh UploadTask with log failures suppressed for the duration of the test.
-		/// LogAssert state is restored in TearDown.
+		/// Creates a fresh UploadTask for testing.
 		/// </summary>
 		protected UploadTask SetupNewTask()
 		{
-			LogAssert.ignoreFailingMessages = true;
 			return new UploadTask();
 		}
 
@@ -99,11 +92,15 @@ namespace Wireframe.Tests
 
 		private IEnumerator ExecuteAsync(UploadTask task, string failMessage, bool shouldSucceed)
 		{
+			// Disable Unity console logging for the task — all diagnostic information
+			// is captured in the report and surfaced via BuildFailReasonString below.
+			// This prevents LogAssert from treating expected failure-path errors as
+			// test failures, and keeps CI output clean.
 			// StartAsync returns a Task whose exceptions must be observed.
 			// We store it so the GC finaliser doesn't raise an unobserved exception,
 			// but we intentionally do not await it here — the coroutine polls IsComplete
 			// which is driven by the task internally.
-			System.Threading.Tasks.Task asyncTask = task.StartAsync();
+			System.Threading.Tasks.Task asyncTask = task.StartAsync(invokeDebugLogs: false);
 
 			while (!task.IsComplete)
 			{
