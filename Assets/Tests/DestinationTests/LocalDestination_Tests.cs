@@ -82,6 +82,8 @@ namespace Wireframe.Tests
 		public static IEnumerable Sources()
 		{
 			(BuildTarget target, BuildTargetGroup group) = GetBuildTargetFromEnvironment();
+			string fileExtension = BuildUtils.GetPlatformExtension(group, target, false); 
+			Debug.Log($"Build target: {target}-{group}-{fileExtension}");
 			
 			// FolderSource — copies Application.dataPath itself, which is guaranteed
 			// to exist on any machine (local or CI) without needing a specific subfolder
@@ -127,7 +129,7 @@ namespace Wireframe.Tests
 				getExpectedFiles: source =>
 				{
 					var buildSource = (BuildConfigSource)source;
-					return new[] { Path.Combine(source.SourceFilePath(), buildSource.BuildConfig.GetProductName + ".exe") };
+					return new[] { Path.Combine(source.SourceFilePath(), buildSource.BuildConfig.GetProductName + fileExtension) };
 				}
 			)).Returns(null);
 
@@ -152,7 +154,7 @@ namespace Wireframe.Tests
 				getExpectedFiles: source =>
 				{
 					var profileSource = (BuildProfileSource)source;
-					return new[] { Path.Combine(source.SourceFilePath(), profileSource.BuildConfig.GetProductName + ".exe") };
+					return new[] { Path.Combine(source.SourceFilePath(), profileSource.BuildConfig.GetProductName + fileExtension) };
 				}
 			)).Returns(null);
 #endif
@@ -160,34 +162,21 @@ namespace Wireframe.Tests
 		
 		private static (BuildTarget target, BuildTargetGroup group) GetBuildTargetFromEnvironment()
 		{
-			string raw = Environment.GetEnvironmentVariable("BUILD_TARGET");
-			if (string.IsNullOrEmpty(raw))
+			string buildTarget = Environment.GetEnvironmentVariable("BUILD_TARGET");
+			if (string.IsNullOrEmpty(buildTarget))
 			{
+				Debug.Log("No Build Target suppied");
 				return (BuildUtils.CurrentTargetPlatform(), BuildUtils.BuildTargetToPlatform());
 				
 			}
 
-			return raw switch
-			{
-				"StandaloneWindows64" => (BuildTarget.StandaloneWindows64, BuildTargetGroup.Standalone),
-				"StandaloneOSX"       => (BuildTarget.StandaloneOSX,       BuildTargetGroup.Standalone),
-				"StandaloneLinux64"   => (BuildTarget.StandaloneLinux64,   BuildTargetGroup.Standalone),
-				_ => throw new System.ArgumentException($"Unsupported TEST_BUILD_TARGET value: '{raw}'")
-			};
-		}
-
-		static private BuildTarget GetCurrentTarget()
-		{
-			if(SystemInfo.operatingSystem.Contains("Mac"))
-			{
-				return BuildTarget.StandaloneOSX;
-			}
-			else if(SystemInfo.operatingSystem.Contains("Linux"))
-			{
-				return BuildTarget.StandaloneLinux64;
-			}
-			
-			return BuildTarget.StandaloneWindows64;
+			if (buildTarget == "StandaloneWindows64")
+				return (BuildTarget.StandaloneWindows64, BuildTargetGroup.Standalone);
+			if (buildTarget == "StandaloneOSX")
+				return (BuildTarget.StandaloneOSX, BuildTargetGroup.Standalone);
+			if (buildTarget == "StandaloneLinux64")
+				return (BuildTarget.StandaloneLinux64, BuildTargetGroup.Standalone);
+			throw new System.ArgumentException($"Unsupported BUILD_TARGET value: '{buildTarget}'");
 		}
 
 		// -------------------------------------------------------------------
