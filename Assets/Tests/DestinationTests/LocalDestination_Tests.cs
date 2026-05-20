@@ -88,7 +88,7 @@ namespace Wireframe.Tests
 				buildSource: () => new FolderSource(Application.dataPath),
 				getExpectedFiles: source =>
 					Directory.GetFiles(source.SourceFilePath(), "*.*", SearchOption.AllDirectories)
-			));
+			)).Returns(null);
 
 			// FileSource — uses a .asmdef file which must exist because the test
 			// assembly itself depends on one. The exact GUID-resolved path is found
@@ -99,12 +99,10 @@ namespace Wireframe.Tests
 				{
 					// Find any .asmdef under Assets/ — it must exist for the tests to compile.
 					string[] asmdefs = Directory.GetFiles(Application.dataPath, "*.asmdef", SearchOption.AllDirectories);
-					Assume.That(asmdefs.Length > 0,
-						"No .asmdef file found under Assets/. The test project is misconfigured.");
 					return new FileSource(asmdefs[0]);
 				},
 				getExpectedFiles: source => new[] { source.SourceFilePath() }
-			));
+			)).Returns(null);
 
 			// BuildConfigSource — only valid when the StandaloneWindows64 build module
 			// is installed. On Linux CI runners without that module Unity will fail the
@@ -114,10 +112,6 @@ namespace Wireframe.Tests
 				name: "BuildConfigSource",
 				buildSource: () =>
 				{
-					Assume.That(
-						BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64),
-						"StandaloneWindows64 build module is not installed — skipping BuildConfigSource test.");
-
 					BuildConfig config = new BuildConfig
 					{
 						ProductName    = nameof(LocalDestination_Test),
@@ -132,7 +126,7 @@ namespace Wireframe.Tests
 					var buildSource = (BuildConfigSource)source;
 					return new[] { Path.Combine(source.SourceFilePath(), buildSource.BuildConfig.GetProductName + ".exe") };
 				}
-			));
+			)).Returns(null);
 
 #if UNITY_6000_3_OR_NEWER
 			// BuildProfileSource — Unity 6.3+ only, and only when a StandaloneWindows64
@@ -141,17 +135,10 @@ namespace Wireframe.Tests
 				name: "BuildProfileSource",
 				buildSource: () =>
 				{
-					Assume.That(
-						BuildPipeline.IsBuildTargetSupported(BuildTargetGroup.Standalone, BuildTarget.StandaloneWindows64),
-						"StandaloneWindows64 build module is not installed — skipping BuildProfileSource test.");
-
 					BuildProfile profile = BuildUtils
 						.GetAllCustomBuildProfiles()
 						.FirstOrDefault(p => new BuildProfileWrapper(p).GetTarget == BuildTarget.StandaloneWindows64);
-
-					Assume.That(profile != null,
-						"No StandaloneWindows64 Build Profile found — skipping BuildProfileSource test.");
-
+					
 					return new BuildProfileSource(profile);
 				},
 				getExpectedFiles: source =>
@@ -159,7 +146,7 @@ namespace Wireframe.Tests
 					var profileSource = (BuildProfileSource)source;
 					return new[] { Path.Combine(source.SourceFilePath(), profileSource.BuildConfig.GetProductName + ".exe") };
 				}
-			));
+			)).Returns(null);
 #endif
 		}
 
