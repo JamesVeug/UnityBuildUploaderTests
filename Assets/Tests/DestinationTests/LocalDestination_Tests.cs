@@ -162,12 +162,11 @@ namespace Wireframe.Tests
 		
 		private static (BuildTarget target, BuildTargetGroup group) GetBuildTargetFromEnvironment()
 		{
-			string buildTarget = Environment.GetEnvironmentVariable("BUILD_TARGET");
+			string buildTarget = GetBuildTargetFromCommands();
 			if (string.IsNullOrEmpty(buildTarget))
 			{
-				Debug.Log("No Build Target suppied");
+				Debug.Log("No Build Target supplied");
 				return (BuildUtils.CurrentTargetPlatform(), BuildUtils.BuildTargetToPlatform());
-				
 			}
 
 			if (buildTarget == "StandaloneWindows64")
@@ -176,7 +175,20 @@ namespace Wireframe.Tests
 				return (BuildTarget.StandaloneOSX, BuildTargetGroup.Standalone);
 			if (buildTarget == "StandaloneLinux64")
 				return (BuildTarget.StandaloneLinux64, BuildTargetGroup.Standalone);
-			throw new System.ArgumentException($"Unsupported BUILD_TARGET value: '{buildTarget}'");
+			
+			throw new ArgumentException($"Unsupported BUILD_TARGET value: '{buildTarget}'");
+		}
+
+		static private string GetBuildTargetFromCommands()
+		{
+			string[] args = Environment.GetCommandLineArgs();
+			for (int i = 0; i < args.Length - 1; i++)
+			{
+				if (args[i] == "-buildTarget")
+					return args[i + 1];
+			}
+			
+			return null;
 		}
 
 		// -------------------------------------------------------------------

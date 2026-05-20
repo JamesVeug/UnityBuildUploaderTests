@@ -125,13 +125,13 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL:   ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
-          BUILD_TARGET: ${{ matrix.buildTarget }}
         with:
           unityVersion:  ${{ matrix.unityVersion }}
           testMode:      ${{ matrix.testMode }}
           artifactsPath: ${{ matrix.testMode }}-artifacts
           githubToken:   ${{ secrets.GITHUB_TOKEN }}
           checkName:     ${{ matrix.unityVersion }} ${{ matrix.testMode }} Results
+          customParameters: -buildTarget ${{ matrix.buildTarget }}
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
