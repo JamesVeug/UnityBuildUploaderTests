@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   test:
-    name: ${{ matrix.unityVersion }} — ${{ matrix.testMode }}
+    name: ${{ matrix.unityVersion }} — ${{ matrix.testMode }} — ${{ matrix.buildTarget }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -24,6 +24,10 @@ jobs:
       fail-fast: false
 
       matrix:
+        testMode:
+          - editmode
+        buildTarget:
+          - StandaloneWindows64
         unityVersion:
           - '6000.4.5f1'
           - '6000.3.5f1'
@@ -34,8 +38,6 @@ jobs:
           - '2021.3.45f2'
           - '2020.3.49f1'
           - '2019.4.41f1'
-        testMode:
-          - editmode
         include:
           - unityVersion: '6000.4.5f1'
             packagePins: '{"com.unity.test-framework":"1.6.0","com.unity.ugui":"1.0.0"}'
@@ -123,6 +125,7 @@ jobs:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL:   ${{ secrets.UNITY_EMAIL }}
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          BUILD_TARGET: ${{ matrix.buildTarget }}
         with:
           unityVersion:  ${{ matrix.unityVersion }}
           testMode:      ${{ matrix.testMode }}

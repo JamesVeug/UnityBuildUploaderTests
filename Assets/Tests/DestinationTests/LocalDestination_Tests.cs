@@ -81,6 +81,8 @@ namespace Wireframe.Tests
 
 		public static IEnumerable Sources()
 		{
+			(BuildTarget target, BuildTargetGroup group) = GetBuildTargetFromEnvironment();
+			
 			// FolderSource — copies Application.dataPath itself, which is guaranteed
 			// to exist on any machine (local or CI) without needing a specific subfolder
 			// like "Scenes" which may not exist in the test repo.
@@ -116,8 +118,8 @@ namespace Wireframe.Tests
 					BuildConfig config = new BuildConfig
 					{
 						ProductName    = nameof(LocalDestination_Test),
-						Target         = GetCurrentTarget(),
-						TargetPlatform = BuildTargetGroup.Standalone,
+						Target         = target,
+						TargetPlatform = group,
 						SceneGUIDs     = new List<string> { "99c9720ab356a0642a771bea13969a05" }
 					};
 					return new BuildConfigSource(config);
@@ -138,7 +140,12 @@ namespace Wireframe.Tests
 				{
 					BuildProfile profile = BuildUtils
 						.GetAllCustomBuildProfiles()
-						.FirstOrDefault(p => new BuildProfileWrapper(p).GetTarget == GetCurrentTarget());
+						.FirstOrDefault(p =>
+							{
+								BuildProfileWrapper wrapper = new BuildProfileWrapper(p);
+								return wrapper.GetTarget == target && wrapper.GetTargetPlatform == group;
+							}
+						);
 					
 					return new BuildProfileSource(profile);
 				},
@@ -149,6 +156,24 @@ namespace Wireframe.Tests
 				}
 			)).Returns(null);
 #endif
+		}
+		
+		private static (BuildTarget target, BuildTargetGroup group) GetBuildTargetFromEnvironment()
+		{
+			string raw = Environment.GetEnvironmentVariable("BUILD_TARGET");
+			if (string.IsNullOrEmpty(raw))
+			{
+				return (BuildUtils.CurrentTargetPlatform(), BuildUtils.BuildTargetToPlatform());
+				
+			}
+
+			return raw switch
+			{
+				"StandaloneWindows64" => (BuildTarget.StandaloneWindows64, BuildTargetGroup.Standalone),
+				"StandaloneOSX"       => (BuildTarget.StandaloneOSX,       BuildTargetGroup.Standalone),
+				"StandaloneLinux64"   => (BuildTarget.StandaloneLinux64,   BuildTargetGroup.Standalone),
+				_ => throw new System.ArgumentException($"Unsupported TEST_BUILD_TARGET value: '{raw}'")
+			};
 		}
 
 		static private BuildTarget GetCurrentTarget()
