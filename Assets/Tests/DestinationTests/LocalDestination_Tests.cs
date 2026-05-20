@@ -81,7 +81,7 @@ namespace Wireframe.Tests
 
 		public static IEnumerable Sources()
 		{
-			(BuildTarget target, BuildTargetGroup group) = GetBuildTargetFromEnvironment();
+			(BuildTarget target, BuildTargetGroup group, int subTarget) = GetBuildTargetFromEnvironment();
 			string fileExtension = BuildUtils.GetPlatformExtension(group, target, false); 
 			Debug.Log($"Build target: {target}-{group}-{fileExtension}");
 			
@@ -122,6 +122,7 @@ namespace Wireframe.Tests
 						ProductName    = nameof(LocalDestination_Test),
 						Target         = target,
 						TargetPlatform = group,
+						TargetPlatformSubTarget = subTarget,
 						SceneGUIDs     = new List<string> { "99c9720ab356a0642a771bea13969a05" },
 						SwitchTargetPlatform = true
 					};
@@ -146,9 +147,10 @@ namespace Wireframe.Tests
 						.FirstOrDefault(p =>
 							{
 								BuildProfileWrapper wrapper = new BuildProfileWrapper(p);
-								return wrapper.GetTarget == target && wrapper.GetTargetPlatform == group;
+								return wrapper.GetTarget == target && wrapper.GetTargetPlatform == group && wrapper.GetTargetPlatformSubTarget == subTarget;
 							}
 						);
+					Assert.NotNull(profile, "Could not find profile matching desired target/group/subTarget!");
 					
 					return new BuildProfileSource(profile);
 				},
@@ -161,21 +163,21 @@ namespace Wireframe.Tests
 #endif
 		}
 		
-		private static (BuildTarget target, BuildTargetGroup group) GetBuildTargetFromEnvironment()
+		private static (BuildTarget target, BuildTargetGroup group, int subTarget) GetBuildTargetFromEnvironment()
 		{
 			string buildTarget = GetBuildTargetFromCommands();
 			if (string.IsNullOrEmpty(buildTarget))
 			{
 				Debug.Log("No Build Target supplied");
-				return (BuildUtils.CurrentTargetPlatform(), BuildUtils.BuildTargetToPlatform());
+				return (BuildUtils.CurrentTargetPlatform(), BuildUtils.BuildTargetToPlatform(), BuildUtils.CurrentSubTarget());
 			}
 
 			if (buildTarget == "StandaloneWindows64")
-				return (BuildTarget.StandaloneWindows64, BuildTargetGroup.Standalone);
+				return (BuildTarget.StandaloneWindows64, BuildTargetGroup.Standalone, 2);
 			if (buildTarget == "StandaloneOSX")
-				return (BuildTarget.StandaloneOSX, BuildTargetGroup.Standalone);
+				return (BuildTarget.StandaloneOSX, BuildTargetGroup.Standalone, 2);
 			if (buildTarget == "StandaloneLinux64")
-				return (BuildTarget.StandaloneLinux64, BuildTargetGroup.Standalone);
+				return (BuildTarget.StandaloneLinux64, BuildTargetGroup.Standalone, 2);
 			
 			throw new ArgumentException($"Unsupported BUILD_TARGET value: '{buildTarget}'");
 		}
