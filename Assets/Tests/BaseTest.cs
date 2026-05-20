@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
@@ -77,20 +78,20 @@ namespace Wireframe.Tests
 		/// <summary>
 		/// Drives the task to completion and asserts it succeeded.
 		/// </summary>
-		protected IEnumerator Succeed(UploadTask task, string failMessage)
+		protected IEnumerator Succeed(UploadTask task, string failMessage, Action onComplete=null)
 		{
-			return ExecuteAsync(task, failMessage, shouldSucceed: true);
+			return ExecuteAsync(task, failMessage, true, onComplete);
 		}
 
 		/// <summary>
 		/// Drives the task to completion and asserts it failed.
 		/// </summary>
-		protected IEnumerator Fail(UploadTask task, string failMessage)
+		protected IEnumerator Fail(UploadTask task, string failMessage, Action onComplete=null)
 		{
-			return ExecuteAsync(task, failMessage, shouldSucceed: false);
+			return ExecuteAsync(task, failMessage, false, onComplete);
 		}
 
-		private IEnumerator ExecuteAsync(UploadTask task, string failMessage, bool shouldSucceed)
+		private IEnumerator ExecuteAsync(UploadTask task, string failMessage, bool shouldSucceed, Action onComplete=null)
 		{
 			// Disable Unity console logging for the task — all diagnostic information
 			// is captured in the report and surfaced via BuildFailReasonString below.
@@ -112,7 +113,6 @@ namespace Wireframe.Tests
 			if (asyncTask.IsFaulted)
 			{
 				Assert.Fail($"UploadTask threw an unhandled exception: {asyncTask.Exception?.Flatten().InnerException?.Message}");
-				yield break;
 			}
 
 			if (shouldSucceed && !task.IsSuccessful)
@@ -120,12 +120,18 @@ namespace Wireframe.Tests
 				// Collect all fail reasons from the report so the test output
 				// immediately tells you what went wrong without needing to dig
 				// through Unity logs or re-run with extra instrumentation.
+				onComplete?.Invoke();
 				string reasons = BuildFailReasonString(task);
 				Assert.Fail($"{failMessage}\n\nTask report:\n{reasons}");
 			}
 			else if (!shouldSucceed)
 			{
+				onComplete?.Invoke();
 				Assert.IsFalse(task.IsSuccessful, failMessage);
+			}
+			else
+			{
+				onComplete?.Invoke();
 			}
 		}
 

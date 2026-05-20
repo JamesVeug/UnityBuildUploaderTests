@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -115,7 +116,7 @@ namespace Wireframe.Tests
 					BuildConfig config = new BuildConfig
 					{
 						ProductName    = nameof(LocalDestination_Test),
-						Target         = BuildTarget.StandaloneWindows64,
+						Target         = GetCurrentTarget(),
 						TargetPlatform = BuildTargetGroup.Standalone,
 						SceneGUIDs     = new List<string> { "99c9720ab356a0642a771bea13969a05" }
 					};
@@ -137,7 +138,7 @@ namespace Wireframe.Tests
 				{
 					BuildProfile profile = BuildUtils
 						.GetAllCustomBuildProfiles()
-						.FirstOrDefault(p => new BuildProfileWrapper(p).GetTarget == BuildTarget.StandaloneWindows64);
+						.FirstOrDefault(p => new BuildProfileWrapper(p).GetTarget == GetCurrentTarget());
 					
 					return new BuildProfileSource(profile);
 				},
@@ -148,6 +149,20 @@ namespace Wireframe.Tests
 				}
 			)).Returns(null);
 #endif
+		}
+
+		static private BuildTarget GetCurrentTarget()
+		{
+			if(SystemInfo.operatingSystem.Contains("Mac"))
+			{
+				return BuildTarget.StandaloneOSX;
+			}
+			else if(SystemInfo.operatingSystem.Contains("Linux"))
+			{
+				return BuildTarget.StandaloneLinux64;
+			}
+			
+			return BuildTarget.StandaloneWindows64;
 		}
 
 		// -------------------------------------------------------------------
@@ -177,9 +192,28 @@ namespace Wireframe.Tests
 			config.AddSource(source);
 			config.Sources[config.Sources.Count - 1].DoNotCache = _doNotCache;
 
-			config.AddDestination(new LocalPathDestination(destinationPath));
+			LocalPathDestination destination = new LocalPathDestination(destinationPath);
+			config.AddDestination(destination);
 
-			yield return Succeed(task, "Task failed — verify the source path exists and the destination is writable.");
+			yield return Succeed(task, "Task failed — verify the source path exists and the destination is writable.", () =>
+			{
+				string path = destination.FullPath();
+				if (!Directory.Exists(path))
+				{
+					Debug.Log("Destination Directory does not exist: " + path);
+				}
+				else
+				{
+					string[] strings = Directory.GetFiles(path, "*.*", SearchOption.AllDirectories);
+					StringBuilder builder = new StringBuilder();
+					builder.AppendLine($"Found {strings.Length} files in destination directory");
+					foreach (string file in strings)
+					{
+						builder.AppendLine(file);
+					}
+					Debug.Log(builder.ToString());
+				}
+			});
 
 			// Assert that every expected file arrived at the correct relative path
 			// under destinationPath. AssertCompareDirectories (for folder sources) or
