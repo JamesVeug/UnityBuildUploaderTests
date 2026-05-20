@@ -1,0 +1,67 @@
+{
+	"Version": 1,
+	"Configs": [
+		{
+			"GUID": "02284e",
+			"BuildName": "Debugging Build",
+			"ProductName": "LocalDestination_Test",
+			"ExtraScriptingDefines": [
+				
+			],
+			"Scenes": [
+				"99c9720ab356a0642a771bea13969a05"
+			],
+			"IsDevelopmentBuild": true,
+			"BuildScriptsOnly": false,
+			"AllowDebugging": true,
+			"ConnectProfiler": true,
+			"EnableDeepProfilingSupport": false,
+			"SwitchTargetPlatform": false,
+			"TargetPlatform": "Standalone",
+			"TargetPlatformSubTarget": 2,
+			"Target": "StandaloneWindows64",
+			"TargetArchitecture": "x64",
+			"StackTraceLogTypes": {
+				"Error": "ScriptOnly",
+				"Assert": "ScriptOnly",
+				"Warning": "ScriptOnly",
+				"Log": "ScriptOnly",
+				"Exception": "ScriptOnly"
+			},
+			"StrippingLevel": "Disabled",
+			"ScriptingBackend": "Mono2x",
+			"CompressionMethod": "Default"
+		},
+		{
+			"GUID": "8c9631",
+			"BuildName": "Release Build",
+			"ProductName": "LocalDestination_Test",
+			"ExtraScriptingDefines": [
+				
+			],
+			"Scenes": [
+				"99c9720ab356a0642a771bea13969a05"
+			],
+			"IsDevelopmentBuild": false,
+			"BuildScriptsOnly": false,
+			"AllowDebugging": false,
+			"ConnectProfiler": false,
+			"EnableDeepProfilingSupport": false,
+			"SwitchTargetPlatform": false,
+			"TargetPlatform": "Standalone",
+			"TargetPlatformSubTarget": 2,
+			"Target": "StandaloneWindows64",
+			"TargetArchitecture": "x64",
+			"StackTraceLogTypes": {
+				"Error": "ScriptOnly",
+				"Assert": "None",
+				"Warning": "None",
+				"Log": "None",
+				"Exception": "ScriptOnly"
+			},
+			"StrippingLevel": "Minimal",
+			"ScriptingBackend": "Mono2x",
+			"CompressionMethod": "Default"
+		}
+	]
+}
