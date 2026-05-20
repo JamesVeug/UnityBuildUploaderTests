@@ -122,7 +122,8 @@ namespace Wireframe.Tests
 						ProductName    = nameof(LocalDestination_Test),
 						Target         = target,
 						TargetPlatform = group,
-						SceneGUIDs     = new List<string> { "99c9720ab356a0642a771bea13969a05" }
+						SceneGUIDs     = new List<string> { "99c9720ab356a0642a771bea13969a05" },
+						SwitchTargetPlatform = true
 					};
 					return new BuildConfigSource(config);
 				},
